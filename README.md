@@ -69,7 +69,7 @@ RelapsePredictionPublic/
 
 Clone the repository. Make sure you have the installed packages in `requirements.txt`:
 ```
-git clone https://github.com/{yourusername}/RelapsePredictionPublic.git
+git clone https://github.com/{yourusername}/Relapse-Prediction-Public.git
 ```
 ```
 pip install -r requirements.txt
