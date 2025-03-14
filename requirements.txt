@@ -1,0 +1,9 @@
+numpy==1.26.4
+pandas==2.2.2
+scipy==1.13.1
+scikit-learn==1.6.1
+tensorflow==2.15.1
+keras==2.15.0
+neurokit2==0.2.6
+hrvanalysis==1.0.3
+pyhrv==0.4.1
