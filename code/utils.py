@@ -252,12 +252,11 @@ def generate_evaluation_result(data_dir, model_dir, test_dir, data_file, model_p
     f1s = [f1_gm0, f1_gm1, f1_gm2, f1_gm3, f1_km0, f1_km1, f1_km2, f1_km3]
 
     user_result_df = pd.DataFrame({'auprc':auprcs, 'auroc':aurocs, 'f1': f1s})
-    # result_best = user_result_df['f1'].idxmax()
+    result_idx = user_result_df['f1'].idxmax()
 
-    auprc_best = user_result_df.loc[result_best, 'auprc']
-    auroc_best = user_result_df.loc[result_best, 'auroc']
-    f1_best = user_result_df.loc[result_best, 'f1']
-    pred = preds[result_best]
+    auprc = user_result_df.loc[result_idx, 'auprc']
+    auroc = user_result_df.loc[result_idx, 'auroc']
+    f1 = user_result_df.loc[result_idx, 'f1']
+    pred = preds[result_idx]
 
-
-    return auprc_best, auroc_best, auprc_base, f1_best, pred, y_true
+    return auprc, auroc, auprc_base, f1, pred, y_true
