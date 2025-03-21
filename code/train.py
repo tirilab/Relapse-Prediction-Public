@@ -15,7 +15,7 @@ from keras import backend as K
 from keras.optimizers import Adam, SGD, RMSprop
 
 
-def Trainer():
+def Trainer(X_train, window):
 
     num_feature = X_train.shape[2]
     filters = 64

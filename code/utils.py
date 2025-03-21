@@ -9,6 +9,7 @@ import seaborn as sns
 import neurokit2 as nk
 import hrvanalysis as hrv
 import pyhrv
+from sklearn.preprocessing import StandardScaler
 from joblib import Parallel, delayed
 from sklearn.metrics import accuracy_score, confusion_matrix, roc_auc_score, roc_curve, precision_recall_curve, auc
 from sklearn.cluster import KMeans
@@ -24,8 +25,8 @@ def load_test_data(test_file, data_file, window, train_mode, eval_mode):
     df = pd.read_csv(test_file, index_col=0).dropna()
 
     ## load train data for normalization
-    df_t['sleeping'] = df_t['sleeping'].astype(int)
     df_t = pd.read_csv(data_file, index_col=0).dropna()
+    df_t['sleeping'] = df_t['sleeping'].astype(int)
 
     norm_cols = ['lin_acc_norm', 'ang_acc_norm', 'heartRate_mean', 'heartRate_max',
           'heartRate_min', 'rRInterval_mean', 'rRInterval_rmssd',
@@ -202,7 +203,7 @@ def eval_results_daily(input_latent, labels, day_index):
 def flatten_chain(matrix):
   return list(chain.from_iterable(matrix))
 
-def reconstruction(X_val_n, X_val_r):
+def reconstruction(X_val_n, X_val_r, model_path):
 
     X = np.concatenate([X_val_n, X_val_r])
     reconstructed_model = load_model(model_path)
@@ -216,7 +217,7 @@ def reconstruction(X_val_n, X_val_r):
 
     return out_img
 
-def generate_evaluation_csv(data_dir, model_dir, test_dir, data_file, model_path, test_file, train_mode:str, eval_mode:str):
+def generate_evaluation_result(data_dir, model_dir, test_dir, data_file, model_path, test_file, train_mode:str, eval_mode:str):
 
     auprc_list = []
     auroc_list = []
@@ -227,9 +228,9 @@ def generate_evaluation_csv(data_dir, model_dir, test_dir, data_file, model_path
     true_list = []
     
     window = 48
-    X_train, X_val_n, X_val_r, X_val_n_day_index, X_val_r_day_index = load_test_data(test_file, data_file, window)
+    X_train, X_val_n, X_val_r, X_val_n_day_index, X_val_r_day_index = load_test_data(test_file, data_file, window, train_mode, test_mode)
 
-    out_img = reconstruction(X_val_n, X_val_r)
+    out_img = reconstruction(X_val_n, X_val_r, model_path)
     labels = [0]*X_val_n.shape[0] + [1]*X_val_r.shape[0]
     val_day_index = flatten_chain(X_val_n_day_index) + flatten_chain(X_val_r_day_index)
 
@@ -251,22 +252,12 @@ def generate_evaluation_csv(data_dir, model_dir, test_dir, data_file, model_path
     f1s = [f1_gm0, f1_gm1, f1_gm2, f1_gm3, f1_km0, f1_km1, f1_km2, f1_km3]
 
     user_result_df = pd.DataFrame({'auprc':auprcs, 'auroc':aurocs, 'f1': f1s})
-    result_best = user_result_df['f1'].idxmax()
+    # result_best = user_result_df['f1'].idxmax()
 
     auprc_best = user_result_df.loc[result_best, 'auprc']
     auroc_best = user_result_df.loc[result_best, 'auroc']
     f1_best = user_result_df.loc[result_best, 'f1']
+    pred = preds[result_best]
 
-    auprc_list.append(auprc_best)
-    auroc_list.append(auroc_best)
-    auprc_base_list.append(auprc_base)
-    result_best_index.append(result_best)
-    f1_list.append(f1_best)
-    pred_list.append(preds[result_best])
-    true_list.append(y_true)
 
-    result_df = pd.DataFrame(data={'auprc': auprc_list, 'auroc': auroc_list, 'auprc_base': auprc_base_list,
-                               'f1': f1_list, 'result_best': result_best_index, 'pred': pred_list,
-                               'y_true':true_list})
-
-    return result_df
+    return auprc_best, auroc_best, auprc_base, f1_best, pred, y_true
